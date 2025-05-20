@@ -1,0 +1,1 @@
+cargo watch -c -x fmt -x clippy -s "trunk build"
