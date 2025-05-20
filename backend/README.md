@@ -24,21 +24,21 @@ chmod +x run.sh
 ./run.sh
 ```
 
-By default, the server starts on port 3000. To use a different port:
+By default, the server starts on port 8000. To use a different port:
 
 ```bash
 # Specify a different port
-PORT=3001 ./run.sh
+PORT=8001 ./run.sh
 ```
 
 Or manually with cargo:
 
 ```bash
 cd backend
-PORT=3001 cargo run
+PORT=8001 cargo run
 ```
 
-The server will start on http://127.0.0.1:3000 (or your specified port)
+The server will start on http://127.0.0.1:8000 (or your specified port)
 
 
 ### Testing the Health Check
@@ -46,7 +46,7 @@ The server will start on http://127.0.0.1:3000 (or your specified port)
 Once the server is running, you can test the health check endpoint:
 
 ```bash
-curl http://127.0.0.1:3000/health
+curl http://127.0.0.1:8000/health
 ```
 
 Expected response:

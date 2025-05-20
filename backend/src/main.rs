@@ -4,6 +4,7 @@ use axum::{
     routing::{get, post},
 };
 use serde_json::json;
+use shared::api::{ApiEndpoints, get_api_base_url};
 use shared::models::Message; // Add the Message struct
 use std::{env, net::SocketAddr};
 use tokio::net::TcpListener;
@@ -29,19 +30,21 @@ async fn main() {
         .allow_headers(Any);
 
     // Build our application with a route
+    let api = ApiEndpoints::new(get_api_base_url());
+    let messages_path = api.messages_endpoint().replace(get_api_base_url(), "");
+
     let app = Router::new()
-        // Health check route
         .route("/health", get(health_check))
-        // New route to handle message submissions
-        .route("/api/messages", post(receive_message))
+        // Use the path part without the domain
+        .route(&messages_path, post(receive_message))
         .layer(cors);
 
     // Define the address to run the server on
     // Allow port to be set via environment variable or use default
     let port = env::var("PORT")
-        .unwrap_or_else(|_| "3000".to_string())
+        .unwrap_or_else(|_| "8000".to_string())
         .parse::<u16>()
-        .unwrap_or(3000);
+        .unwrap_or(8000);
     let addr = SocketAddr::from(([127, 0, 0, 1], port));
     tracing::info!("Starting server on {}", addr);
 
