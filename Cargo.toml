@@ -1,21 +1,7 @@
-[package]
-name = "unscrolled"
-version = "0.1.0"
-edition = "2024"
-
-[dependencies]
-# Development version of Yew
-yew = { git = "https://github.com/yewstack/yew/", features = ["csr"] }
-# Add these dependencies
-gloo = "0.11.0"
-web-sys = { version = "0.3.77", features = [
-    "HtmlInputElement",
-    "Document",
-    "Element",
-    "HtmlElement",
-    "DomRect",
-    "Window",
-    "Node",
-] }
-js-sys = "0.3.77"
-wasm-bindgen = "0.2.100"
+[workspace]
+members = [
+    "frontend",
+    "backend",
+    "shared"
+]
+resolver = "2"
