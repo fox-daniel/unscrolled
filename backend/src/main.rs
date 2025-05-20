@@ -1,5 +1,10 @@
-use axum::{Json, Router, http::StatusCode, routing::get};
+use axum::{
+    Json, Router,
+    http::StatusCode,
+    routing::{get, post},
+};
 use serde_json::json;
+use shared::models::Message; // Add the Message struct
 use std::{env, net::SocketAddr};
 use tokio::net::TcpListener;
 use tower_http::cors::{Any, CorsLayer};
@@ -27,6 +32,8 @@ async fn main() {
     let app = Router::new()
         // Health check route
         .route("/health", get(health_check))
+        // New route to handle message submissions
+        .route("/api/messages", post(receive_message))
         .layer(cors);
 
     // Define the address to run the server on
@@ -67,4 +74,10 @@ async fn health_check() -> (StatusCode, Json<serde_json::Value>) {
             "version": env!("CARGO_PKG_VERSION")
         })),
     )
+}
+
+// New handler to receive messages from the frontend
+async fn receive_message(Json(message): Json<Message>) -> StatusCode {
+    tracing::info!("Received message: {}", message.content);
+    StatusCode::OK
 }

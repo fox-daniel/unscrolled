@@ -1,14 +1,10 @@
+use gloo::console::log;
 use js_sys::Date;
+use shared::models::Message; // Import the shared Message struct
+use wasm_bindgen_futures::spawn_local;
 use web_sys::HtmlInputElement;
 use web_sys::wasm_bindgen::JsCast;
 use yew::prelude::*;
-
-// Structure to represent a chat message
-#[derive(Clone, PartialEq)]
-struct Message {
-    content: String,
-    timestamp: String,
-}
 
 #[function_component]
 fn App() -> Html {
@@ -46,6 +42,21 @@ fn App() -> Html {
                 content: (*current_input).clone(),
                 timestamp: get_current_time(),
             };
+
+            // Clone the message for the async closure
+            let new_message_clone = new_message.clone();
+
+            // Send message to backend
+            spawn_local(async move {
+                let client = gloo::net::http::Request::post("http://127.0.0.1:8000/api/messages")
+                    .json(&new_message_clone)
+                    .expect("Failed to serialize message");
+
+                match client.send().await {
+                    Ok(_) => log!("Message sent to backend successfully"),
+                    Err(err) => log!(format!("Failed to send message to backend: {:?}", err)),
+                }
+            });
 
             // Update messages
             let mut updated_messages = (*messages).clone();

@@ -2152,6 +2152,7 @@ dependencies = [
  "js-sys",
  "shared",
  "wasm-bindgen",
+ "wasm-bindgen-futures",
  "web-sys",
  "yew",
 ]
