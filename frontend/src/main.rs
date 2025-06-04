@@ -1,11 +1,27 @@
 use gloo::console::log;
+use gloo::net::http::Request;
 use js_sys::Date;
 use shared::api::{ApiEndpoints, get_api_base_url};
-use shared::models::Message; // Import the shared Message struct
+use shared::models::Message;
 use wasm_bindgen_futures::spawn_local;
 use web_sys::HtmlInputElement;
 use web_sys::wasm_bindgen::JsCast;
 use yew::prelude::*;
+
+// Reusable message service function
+fn send_message_to_backend(message: Message) {
+    let api = ApiEndpoints::new(get_api_base_url());
+    spawn_local(async move {
+        let client = Request::post(&api.messages_endpoint())
+            .json(&message)
+            .expect("Failed to serialize message");
+
+        match client.send().await {
+            Ok(_) => log!("Message sent to backend successfully"),
+            Err(err) => log!(format!("Failed to send message to backend: {:?}", err)),
+        }
+    });
+}
 
 #[function_component]
 fn App() -> Html {
@@ -30,7 +46,6 @@ fn App() -> Html {
 
     // Handler for form submission
     let on_submit = {
-        let api = ApiEndpoints::new(get_api_base_url());
         let messages = messages.clone();
         let current_input = current_input.clone();
         Callback::from(move |e: SubmitEvent| {
@@ -45,25 +60,13 @@ fn App() -> Html {
                 timestamp: get_current_time(),
             };
 
-            // Clone the message for the async closure
-            let new_message_clone = new_message.clone();
-
-            // Send message to backend
-            spawn_local(async move {
-                let client = gloo::net::http::Request::post(&api.messages_endpoint())
-                    .json(&new_message_clone)
-                    .expect("Failed to serialize message");
-
-                match client.send().await {
-                    Ok(_) => log!("Message sent to backend successfully"),
-                    Err(err) => log!(format!("Failed to send message to backend: {:?}", err)),
-                }
-            });
-
-            // Update messages
+            // Update local state
             let mut updated_messages = (*messages).clone();
-            updated_messages.push(new_message);
+            updated_messages.push(new_message.clone());
             messages.set(updated_messages);
+
+            // Send to backend using the service function
+            send_message_to_backend(new_message);
 
             // Clear input
             current_input.set(String::new());
