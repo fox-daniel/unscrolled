@@ -82,17 +82,32 @@ async fn health_check() -> (StatusCode, Json<serde_json::Value>) {
 }
 
 // Handler to receive messages from the frontend and send to Anthropic
-async fn receive_message(Json(message): Json<Message>) -> StatusCode {
+async fn receive_message(
+    Json(message): Json<Message>,
+) -> Result<Json<Message>, (StatusCode, Json<serde_json::Value>)> {
     tracing::info!("Received message: {}", message.content);
 
     match send_to_anthropic(&message.content).await {
         Ok(response) => {
-            println!("Anthropic response: {}", response);
-            StatusCode::OK
+            tracing::info!("Anthropic response: {}", response);
+
+            // Create a response message with Anthropic's reply
+            let response_message = Message {
+                content: response,
+                timestamp: get_current_time(),
+            };
+
+            Ok(Json(response_message))
         }
         Err(e) => {
             tracing::error!("Failed to get response from Anthropic: {}", e);
-            StatusCode::INTERNAL_SERVER_ERROR
+            Err((
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(json!({
+                    "error": "Failed to get response from Anthropic",
+                    "details": e.to_string()
+                })),
+            ))
         }
     }
 }
@@ -159,4 +174,18 @@ async fn send_to_anthropic(user_message: &str) -> Result<String, Box<dyn std::er
         .ok_or("Failed to extract message content from Anthropic response")?;
 
     Ok(content.to_string())
+}
+
+// Helper function to get current time (same as frontend)
+fn get_current_time() -> String {
+    use std::time::{SystemTime, UNIX_EPOCH};
+
+    let duration = SystemTime::now().duration_since(UNIX_EPOCH).unwrap();
+    let total_seconds = duration.as_secs();
+
+    let hours = (total_seconds / 3600) % 24;
+    let minutes = (total_seconds / 60) % 60;
+    let seconds = total_seconds % 60;
+
+    format!("{:02}:{:02}:{:02}", hours, minutes, seconds)
 }
