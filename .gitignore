@@ -1,0 +1,10 @@
+# Rust artifacts
+**/target/
+**/dist/
+**/*.rs.bk
+**/Cargo.lock
+**/.env
+
+# IDEs and editors
+.idea/
+.vscode/
